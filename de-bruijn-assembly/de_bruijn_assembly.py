@@ -202,6 +202,7 @@ class DeBruijnAssembler:
             Yields:
                 Generator[List[str], None, None]: a generator yielding all eulerian paths.
         """
+
         if self._is_all_edges_visited(edge_count):
             yield path[:]
 
@@ -238,6 +239,16 @@ class DeBruijnAssembler:
             # Backtrack
             edge_count = self._init_edge_count(graph)
             all_eulerian_paths = list(self._find_all_eulerian_paths(graph, start_node, [start_node], edge_count))
+
+            # @Todo
+            # Debug
+            # Why So Many Repeats? 32 paths for this sample test case.
+            # Should have been 8
+            # print(len(all_eulerian_paths))
+            # for eulerian_path in all_eulerian_paths:
+            #     print(eulerian_path)
+            # exit()
+
             unique_eulerian_paths = []
             for path in all_eulerian_paths:
                 if path not in unique_eulerian_paths:
@@ -286,15 +297,23 @@ class DeBruijnAssembler:
         return graph
 
     def save_as_svg(self, graph, filename="de_bruijn_graph.svg"):
+        """
+            Save a De Bruijn graph as an SVG image.
+
+            Args:
+                graph (dict)    :   A dictionary representing the De Bruijn graph
+                filename (str)  :   The name of the SVG file to be saved. Defaults to "de_bruijn_graph.svg".
+
+            Returns:
+                pydot.Dot: The pydot.Dot object representing the generated graph.
+        """
         pydot_graph = pydot.Dot("de_bruijn_graph", graph_type="digraph", bgcolor="white")
         for u, adj in graph.items():
             node_u = pydot.Node(u, label=u, shape="circle")
             pydot_graph.add_node(node_u)
-
             for v in adj:
                 node_v = pydot.Node(v, label=v, shape="circle")
                 pydot_graph.add_edge(pydot.Edge(node_u, node_v, label=u[0]+v))
-
         pydot_graph.write_svg('de_brujin_graph.svg')
         return pydot_graph
 
