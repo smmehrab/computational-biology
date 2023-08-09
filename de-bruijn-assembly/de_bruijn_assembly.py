@@ -44,6 +44,7 @@ For the given input (Sequence & k),
 """
 
 import copy
+import pydot
 
 LINE = "-------------------------------------------------"
 
@@ -284,6 +285,19 @@ class DeBruijnAssembler:
             graph[prefix].append(suffix)
         return graph
 
+    def save_as_svg(self, graph, filename="de_bruijn_graph.svg"):
+        pydot_graph = pydot.Dot("de_bruijn_graph", graph_type="digraph", bgcolor="white")
+        for u, adj in graph.items():
+            node_u = pydot.Node(u, label=u, shape="circle")
+            pydot_graph.add_node(node_u)
+
+            for v in adj:
+                node_v = pydot.Node(v, label=v, shape="circle")
+                pydot_graph.add_edge(pydot.Edge(node_u, node_v, label=u[0]+v))
+
+        pydot_graph.write_svg('de_brujin_graph.svg')
+        return pydot_graph
+
 def main():
     """
         Entry Point
@@ -329,6 +343,8 @@ def main():
     for assmbled_sequence in assembled_sequences:
         print(assmbled_sequence)
     print(LINE)
+
+    de_bruijn_assembler.save_as_svg(de_bruijn_graph)
 
 if __name__ == "__main__":
     main()
