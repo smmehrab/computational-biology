@@ -43,6 +43,9 @@ For the given input (Sequence & k),
 -------------------------------------------------
 """
 
+# sudo apt install graphviz
+# pip install pydot
+
 import copy
 import pydot
 
@@ -296,7 +299,7 @@ class DeBruijnAssembler:
             graph[prefix].append(suffix)
         return graph
 
-    def save_as_svg(self, graph, filename="de_bruijn_graph.svg"):
+    def save_graph(self, graph, filename="de_bruijn_graph.png"):
         """
             Save a De Bruijn graph as an SVG image.
 
@@ -307,14 +310,25 @@ class DeBruijnAssembler:
             Returns:
                 pydot.Dot: The pydot.Dot object representing the generated graph.
         """
-        pydot_graph = pydot.Dot("de_bruijn_graph", graph_type="digraph", bgcolor="white")
-        for u, adj in graph.items():
-            node_u = pydot.Node(u, label=u, shape="circle")
-            pydot_graph.add_node(node_u)
-            for v in adj:
-                node_v = pydot.Node(v, label=v, shape="circle")
-                pydot_graph.add_edge(pydot.Edge(node_u, node_v, label=u[0]+v))
-        pydot_graph.write_svg('de_brujin_graph.svg')
+
+        # Graph Config
+        pydot_graph = pydot.Dot("de_bruijn_graph", graph_type="digraph", bgcolor="white", rankdir="LR")
+        pydot_graph.set_node_defaults(fillcolor="lime", style="filled", shape="circle", fontname="Courier", fontsize="10")
+        pydot_graph.set_edge_defaults(fontname="Courier", fontsize="10")
+
+        for node, neighbors in graph.items():
+            # Node
+            pydot_node = pydot.Node(node, label=node)
+            pydot_graph.add_node(pydot_node)
+            for neighbor in neighbors:
+                # Neighbor
+                pydot_neighbor = pydot.Node(neighbor, label=neighbor)
+                edge_label = node[:-1]+neighbor
+                # Edge
+                pydot_edge = pydot.Edge(pydot_node, pydot_neighbor, label=edge_label)
+                pydot_graph.add_edge(pydot_edge)
+        # Save
+        pydot_graph.write_png(filename)
         return pydot_graph
 
 def main():
@@ -363,7 +377,7 @@ def main():
         print(assmbled_sequence)
     print(LINE)
 
-    de_bruijn_assembler.save_as_svg(de_bruijn_graph)
+    de_bruijn_assembler.save_graph(de_bruijn_graph)
 
 if __name__ == "__main__":
     main()
