@@ -1,75 +1,41 @@
-"""
--------------------------------------------------
-Submitted By:
--------------------------------------------------
-Full Name   :   S.M.Mehrabul Islam
-Roll        :   SH-86
-
--------------------------------------------------
-Lab Assignment 1 [De Bruijn Fragment Assembly]
--------------------------------------------------
-
-Given, 
-Sequence = GACTTACGTACT 
-k = 3
-
-For the given input (Sequence & k),
-(1) Generated the Fragments from the Sequence
-        ['GAC', 'ACT', 'CTT', 'TTA', 'TAC', 'ACG', 'CGT', 'GTA', 'TAC', 'ACT']
-(2) Built a De Bruijn Graph where the graph is represented by a python dictionary.
-    Number of Nodes: 7
-        GA: ['AC']
-        AC: ['CT', 'CG']
-        CT: ['TT']
-        TT: ['TA']
-        TA: ['AC']
-        CG: ['GT']
-        GT: ['TA']
-(3) Check if the graph is Eulerian or not.
-        Eulerian Check: [True/False]
-(4) Hierholzer's Algorithm
-    Finds a single eulerian path in O(V+E) time.
-        ['GA', 'AC', 'CT', 'TT', 'TA', 'AC', 'CG', 'GT', 'TA', 'AC', 'CT']
-    If there's only one Eulerian Path possible in the graph, 
-    then this algorithm will efficiently find the path.
-(5) Backtracking Algorithm
-    Finds all eulerian paths via backtracking to explore all possible options.
-        ['GA', 'AC', 'CT', 'TT', 'TA', 'AC', 'CG', 'GT', 'TA', 'AC', 'CT']
-        ['GA', 'AC', 'CG', 'GT', 'TA', 'AC', 'CT', 'TT', 'TA', 'AC', 'CT']
-(6) Got Assembled Sequences from Eulerian Paths
-        "GACGTACTTACT"
-        "GACTTACGTACT"
-
--------------------------------------------------
-"""
-
-# sudo apt install graphviz
-# pip install pydot
+# ************************************************
+# username  :   smmehrab
+# fullname  :   s.m.mehrabul islam
+# email     :   smmehrabul-2017614964@cs.du.ac.bd
+# institute :   university of dhaka, bangladesh
+# reg       :   2017614964
+# ************************************************
 
 import copy
 import pydot
 
-LINE = "-------------------------------------------------"
+# Dependencies (Graph Visualization)
+# sudo apt install graphviz
+# pip install pydot
 
 class FragmentGenerator:
-    def __init__(self):
-        pass
+    def __init__(self, sequence=None, k=None):
+        self._sequence = sequence
+        self._k = k
 
-    def generate_fragments(self, sequence, k) :
+    def set(self, sequence, k):
         """
-            Generate fragments from the given sequence.
-
-            Args:
-                sequence (str): input DNA sequence.
-                k (int): The size of the fragments.
-
-            Returns:
-                List[str]: A list of generated fragments.
+            Set the sequence and fragment size (k)
         """
+        self._sequence = sequence
+        self._k = k
+
+    def generate(self) :
+        """
+            Generate fragments according to the sequence and fragment size (k)
+        """
+        if self._sequence is None or self._k is None:
+            raise Exception("Sequence or Fragment Size (k) is not set.")
+
         fragments = []
-        sequence_length = len(sequence)
-        for i in range(0, sequence_length - k + 1):
-            fragment = sequence[i: i + k]
+        sequence_length = len(self._sequence)
+        for i in range(0, sequence_length - self._k + 1):
+            fragment = self._sequence[i: i + self._k]
             fragments.append(fragment)
         return fragments
 
@@ -79,13 +45,7 @@ class DeBruijnAssembler:
 
     def _find_degrees(self, graph):
         """
-            Find the in-degree and out-degree of each node in the graph.
-
-            Args:
-                graph (Dict[str, List[str]]): The De Bruijn graph.
-
-            Returns:
-                Tuple[Dict[str, int], Dict[str, int]]: tuple containing dictionaries of in-degree and out-degree for each node.
+            Find indegree and outdegree of each node in the graph
         """
         indegree = {node: 0 for node in graph}
         outdegree = {node: 0 for node in graph}
@@ -99,13 +59,7 @@ class DeBruijnAssembler:
 
     def _eulerian_check(self, graph):
         """
-            Check if the given De Bruijn graph has an Eulerian path.
-
-            Args:
-                graph (Dict[str, List[str]]): De Bruijn graph.
-
-            Returns:
-                Tuple[bool, Optional[str]]: tuple containing a boolean indicating if the graph has an Eulerian path and the starting node for the path (if exists).
+            Check if the given De Bruijn Graph has an Eulerian path.
         """
         indegree, outdegree = self._find_degrees(graph)
 
@@ -137,14 +91,7 @@ class DeBruijnAssembler:
 
     def _hierholzer(self, graph, start_node):
         """
-            Find an Eulerian path in the given De Bruijn graph using the Hierholzer Algorithm.
-
-            Args:
-                graph (Dict[str, List[str]]): De Bruijn graph.
-                start_node (str): Starting node for the Eulerian path.
-
-            Returns:
-                List[str]: eulerian path
+            Hierholzer: Find an Eulerian path in the given De Bruijn graph
         """
         if len(graph) == 0:
             return []
@@ -159,116 +106,69 @@ class DeBruijnAssembler:
                 euler.append(stack.pop())
         return euler[::-1]
 
-    def _init_edge_count(self, graph):
+    def _init_edge_status(self, graph):
         """
-            Initialize the edge status dictionary for the given De Bruijn graph.
-
-            Args:
-                graph (Dict[str, List[str]]): De Bruijn graph.
-
-            Returns:
-                Dict[Tuple[str, str], int]: Initialized edge status dictionary.
+            Initialize the edge status for the given De Bruijn graph
+            alongside getting the total number of edges
         """
-        edge_count = {}
+        visited = {}
+        total_edges = 0
         for node, neighbors in graph.items():
-            for neighbor in neighbors:
-                if (node, neighbor) not in edge_count:
-                    edge_count[(node, neighbor)] = 0
-                edge_count[(node, neighbor)] += 1
-        return edge_count
+            visited[node] = []
+            for _ in neighbors:
+                total_edges += 1
+                visited[node].append(False)
+        return visited, total_edges
 
-    def _is_all_edges_visited(self, edge_count):
+    def _find_all_eulerian_paths(self, graph, node, path, visited, edges_included, total_edges):
         """
-            Check if all edges in the edge status dictionary have been visited.
-
-            Args:
-                edge_count (Dict[Tuple[str, str], int]): edge status dictionary.
-
-            Returns:
-                bool: True if all edges have been visited, False otherwise.
-        """
-        for edge, count in edge_count.items():
-            if count > 0:
-                return False
-        return True
-
-    def _find_all_eulerian_paths(self, graph, node, path, edge_count):
-        """
-            Find all Eulerian paths in the given De Bruijn graph.
-
-            Args:
-                graph (Dict[str, List[str]]): De Bruijn graph.
-                node (str): current node being visited.
-                path (List[str]): current path being constructed.
-                edge_count (Dict[Tuple[str, str], bool]): edge status dictionary.
-
-            Yields:
-                Generator[List[str], None, None]: a generator yielding all eulerian paths.
+            Backtrack: Find all Eulerian paths in the given De Bruijn graph
         """
 
-        if self._is_all_edges_visited(edge_count):
+        if edges_included == total_edges:
             yield path[:]
 
-        for neighbor in graph[node]:
-            if edge_count[(node, neighbor)] <= 0:
-                continue
-            edge_count[(node, neighbor)] -= 1
-            path.append(neighbor)
-            yield from self._find_all_eulerian_paths(graph, neighbor, path, edge_count)
-            path.pop()
-            edge_count[(node, neighbor)] += 1
+        for index, neighbor in enumerate(graph[node]):
+            if not visited[node][index]:
+                visited[node][index] = True
+                path.append(neighbor)
+                yield from self._find_all_eulerian_paths(graph, neighbor, path, visited, edges_included+1, total_edges)
+                path.pop()
+                visited[node][index] = False
 
     def find_eulerian_path(self, graph):
         """
-            Find an Eulerian path and all Eulerian paths in the given De Bruijn graph.
-
-            Args:
-                graph (Dict[str, List[str]]): The De Bruijn graph.
-
-            Returns:
-                Tuple[List[str], List[List[str]]
+            Find eulerian paths for the given De Bruijn graph
+            (1) Eulerian Check
+            (2) Hierholzer
+            (3) Backtrack
         """
-        hierholzer_eulerian_path = []
-        all_eulerian_paths = []
 
+        # Eulerian Check
         is_eulerian, start_node = self._eulerian_check(graph)
-        print(f"Eulerian Check: [{is_eulerian}]")
+        if not is_eulerian:
+            raise Exception("Given De Bruijn Graph is not Eulerian.")
 
-        if is_eulerian:
-            # Hierholzer
-            graph_copy = copy.deepcopy(graph)
-            hierholzer_eulerian_path = self._hierholzer(graph_copy, start_node)
+        # Hierholzer
+        graph_copy = copy.deepcopy(graph)
+        hierholzer_eulerian_path = self._hierholzer(graph_copy, start_node)
 
-            # Backtrack
-            edge_count = self._init_edge_count(graph)
-            all_eulerian_paths = list(self._find_all_eulerian_paths(graph, start_node, [start_node], edge_count))
+        # Backtrack
+        visited, total_edges = self._init_edge_status(graph)
+        all_eulerian_paths = list(self._find_all_eulerian_paths(graph, start_node, [start_node], visited, 0, total_edges))
 
-            # @Todo
-            # Debug
-            # Why So Many Repeats? 32 paths for this sample test case.
-            # Should have been 8
-            # print(len(all_eulerian_paths))
-            # for eulerian_path in all_eulerian_paths:
-            #     print(eulerian_path)
-            # exit()
-
-            unique_eulerian_paths = []
-            for path in all_eulerian_paths:
-                if path not in unique_eulerian_paths:
-                    unique_eulerian_paths.append(path)
-            all_eulerian_paths = unique_eulerian_paths
+        # Remove Duplicates
+        unique_eulerian_paths = []
+        for path in all_eulerian_paths:
+            if path not in unique_eulerian_paths:
+                unique_eulerian_paths.append(path)
+        all_eulerian_paths = unique_eulerian_paths
 
         return hierholzer_eulerian_path, all_eulerian_paths
 
     def assemble(self, eulerian_paths):
         """
-            Assemble the given Eulerian paths into sequences.
-
-            Args:
-                eulerian_paths (List[List[str]]): list of eulerian paths
-
-            Returns:
-                List[str]: list of assembled sequences.
+            Assemble the given Eulerian paths into sequences
         """
         assembled_sequences = set()
         for path in eulerian_paths:
@@ -280,13 +180,8 @@ class DeBruijnAssembler:
 
     def build_graph(self, fragments):
         """
-            Build a De Bruijn graph from the given fragments.
-
-            Args:
-                fragments (List[str]): A list of fragments.
-
-            Returns:
-                Dict[str, List[str]]: De Bruijn graph.
+            Build a De Bruijn graph from the given fragments
+            and store it as a python dictionary
         """
         graph = {}
         for fragment in fragments:
@@ -301,16 +196,8 @@ class DeBruijnAssembler:
 
     def save_graph(self, graph, filename="de_bruijn_graph.png"):
         """
-            Save a De Bruijn graph as an SVG image.
-
-            Args:
-                graph (dict)    :   A dictionary representing the De Bruijn graph
-                filename (str)  :   The name of the SVG file to be saved. Defaults to "de_bruijn_graph.svg".
-
-            Returns:
-                pydot.Dot: The pydot.Dot object representing the generated graph.
+            Save a De Bruijn graph as an .png image.
         """
-
         # Graph Config
         pydot_graph = pydot.Dot("de_bruijn_graph", graph_type="digraph", bgcolor="white", rankdir="LR")
         pydot_graph.set_node_defaults(fillcolor="lime", style="filled", shape="circle", fontname="Courier", fontsize="10")
@@ -331,36 +218,23 @@ class DeBruijnAssembler:
         pydot_graph.write_png(filename)
         return pydot_graph
 
-def main():
-    """
-        Entry Point
-    """
-
-    sequence = "GACTTACGTACT"
-    k = 3
+def output(sequence, k, fragments, graph, hierholzer_eulerian_path, all_eulerian_paths, assembled_sequences):
+    LINE = "-------------------------------------------------"
 
     print(LINE)
     print(f"Sequence         : {sequence}")
     print(f"Fragment Size (k): {k}")
 
-    fragment_generator = FragmentGenerator()
-    fragments = fragment_generator.generate_fragments(sequence, k)
-
     print(LINE)
     print("Fragments: (Generated from Sequence)")
     print(fragments)
 
-    de_bruijn_assembler = DeBruijnAssembler()
-    de_bruijn_graph = de_bruijn_assembler.build_graph(fragments)
-
     print(LINE)
     print("De Bruijn Graph: (Built from Fragments)")
-    print(f"Number of Nodes: {len(de_bruijn_graph)}")
-    for node, neighbors in de_bruijn_graph.items():
+    print(f"Number of Nodes: {len(graph)}")
+    for node, neighbors in graph.items():
         print(f"{node}: {neighbors}")
     print(LINE)
-
-    hierholzer_eulerian_path, all_eulerian_paths = de_bruijn_assembler.find_eulerian_path(de_bruijn_graph)
 
     print("Eulerian Path: (Hierholzer Algorithm)")
     print(hierholzer_eulerian_path)
@@ -371,13 +245,39 @@ def main():
         print(eulerian_path)
     print(LINE)
 
-    assembled_sequences = de_bruijn_assembler.assemble(all_eulerian_paths)
     print("Assembled Sequences: (From All Eulerian Paths)")
     for assmbled_sequence in assembled_sequences:
         print(assmbled_sequence)
     print(LINE)
 
+def main():
+    """
+        Entry Point for the Program
+    """
+
+    # Input
+    sequence = "GACTTACGTACT"
+    k = 3
+
+    # Generate Fragments
+    fragment_generator = FragmentGenerator(sequence, k)
+    fragments = fragment_generator.generate()
+
+    # Build Graph
+    de_bruijn_assembler = DeBruijnAssembler()
+    de_bruijn_graph = de_bruijn_assembler.build_graph(fragments)
+
+    # Save Graph
     de_bruijn_assembler.save_graph(de_bruijn_graph)
+
+    # Find Eulerian Paths
+    hierholzer_eulerian_path, all_eulerian_paths = de_bruijn_assembler.find_eulerian_path(de_bruijn_graph)
+
+    # Assemble into Sequences
+    assembled_sequences = de_bruijn_assembler.assemble(all_eulerian_paths)
+
+    # Print Output
+    output(sequence, k, fragments, de_bruijn_graph, hierholzer_eulerian_path, all_eulerian_paths, assembled_sequences)
 
 if __name__ == "__main__":
     main()
