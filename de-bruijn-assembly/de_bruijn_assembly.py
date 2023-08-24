@@ -9,10 +9,6 @@
 import copy
 import pydot
 
-# Dependencies (Graph Visualization)
-# sudo apt install graphviz
-# pip install pydot
-
 class FragmentGenerator:
     def __init__(self, sequence=None, k=None):
         self._sequence = sequence
