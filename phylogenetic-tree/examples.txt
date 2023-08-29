@@ -1,0 +1,32 @@
+    # Example 1
+    S1 = "ACGCGTTGGGCGATGGCAAC"
+    S2 = "ACGCGTTGGGCGACGGTAAT"
+    S3 = "ACGCATTGAATGATGATAAT"
+    S4 = "ACGCATTGAATGATGATAAT"
+    S5 = "ACACATTGAGTGATAATAAT"
+    sequences = [S1, S2, S3, S4, S5]
+
+    # Example 2
+    S1 = "ATCGATCG"
+    S2 = "GTAGACGA"
+    S3 = "ACCGTACG"
+    S4 = "TCAGTCAG"
+    S5 = "GCCTACAG"
+    sequences = [S1, S2, S3, S4, S5]
+
+    # Example 3
+    S1 = "ATCGTGGTACTG" 
+    S2 = "CCGGAGAACTAG" 
+    S3 = "AACGTGCTACTG" 
+    S4 = "ATGGTGAAAGTG" 
+    S5 = "CCGGAAAACTTG" 
+    S6 = "TGGCCCTGTATC"
+    sequences = [S1, S2, S3, S4, S5, S6]
+
+    # Example 4
+    S1 = "GATCAGCC"
+    S2 = "GTACAGTC"
+    S3 = "AGGCAGCC"
+    S4 = "AGCCTACC"
+    S5 = "AGCTTGCC"
+    sequences = [S1, S2, S3, S4, S5]
