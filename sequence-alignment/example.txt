@@ -1,0 +1,34 @@
+    # Example 1
+    S1 = "CTCGCAGC"
+    S2 = "CATTCAG"
+    match = 10
+    mismatch = -2
+    gap = -5
+
+    # Example 2
+    S1 = "ATGGCCTC" 
+    S2 = "ACGGCTC"
+    match = 1
+    mismatch = -3
+    gap = -4
+
+    # Example 3
+    S1 = "GATAC" 
+    S2 = "GAATTC"
+    match = 2
+    mismatch = -1
+    gap = -2
+
+    # Example 4
+    S1 = "ACACACTA"
+    S2 = "AGCACACA"
+    match = 10
+    mismatch = -2
+    gap = -5
+
+    # Example 5
+    S1 = "AGCTAAGCTAA"
+    S2 = "AGCCTAGCCAA"
+    match = +2
+    mismatch = -1
+    gap = -1
